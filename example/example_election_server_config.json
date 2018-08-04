@@ -1,0 +1,49 @@
+{
+    "servers": [
+        {
+            "name": "example1",
+            "ip": "127.0.0.1",
+            "comm_port": 7654,
+            "client_port": 8765,
+            "statelog": "/home/armandli/raft/example/example1_state.log",
+            "logfile": "/home/armandli/raft/example/example1.log"
+        },
+        {
+            "name": "example2",
+            "ip": "127.0.0.1",
+            "comm_port": 7655,
+            "client_port": 8766,
+            "statelog": "/home/armandli/raft/example/example2_state.log",
+            "logfile": "/home/armandli/raft/example/example2.log"
+        },
+        {
+            "name": "example3",
+            "ip": "127.0.0.1",
+            "comm_port": 7656,
+            "client_port": 8767,
+            "statelog": "/home/armandli/raft/example/example3_state.log",
+            "logfile": "/home/armandli/raft/example/example3.log"
+        },
+        {
+            "name": "example4",
+            "ip": "127.0.0.1",
+            "comm_port": 7657,
+            "client_port": 8768,
+            "statelog": "/home/armandli/raft/example/example4_state.log",
+            "logfile": "/home/armandli/raft/example/example4.log"
+        },
+        {
+            "name": "example5",
+            "ip": "127.0.0.1",
+            "comm_port": 7658,
+            "client_port": 8769,
+            "statelog": "/home/armandli/raft/example/example5_state.log",
+            "logfile": "/home/armandli/raft/example/example5.log"
+        }
+    ],
+    "config": {
+        "election_timeout_min": 150,
+        "election_timeout_max": 300,
+        "heartbeat_interval": 75
+    }
+}

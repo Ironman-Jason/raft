@@ -10,7 +10,7 @@
 
 #include <raft_util.h>
 
-namespace RaftMsg {
+namespace Raft {
 
 enum RaftMsgType: unsigned {
   RVoteReq,
@@ -120,6 +120,6 @@ struct Reply {
   }
 };
 
-} //RaftMsg
+} //Raft
 
 #endif //RAFT_MSG

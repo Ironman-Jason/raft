@@ -1,0 +1,49 @@
+{
+    "servers": [
+        {
+            "name": "machine1",
+            "ip": "127.0.0.1",
+            "comm_port": 7654,
+            "client_port": 8765,
+            "statelog": "/home/armandli/code/raft/machine1_state.log",
+            "logfile": "/home/armandli/code/raft/machine1.log"
+        },
+        {
+            "name": "machine2",
+            "ip": "127.0.0.1",
+            "comm_port": 7655,
+            "client_port": 8766,
+            "statelog": "/home/armandli/code/raft/machine2_state.log",
+            "logfile": "/home/armandli/code/raft/machine2.log"
+        },
+        {
+            "name": "machine3",
+            "ip": "127.0.0.1",
+            "comm_port": 7656,
+            "client_port": 8767,
+            "statelog": "/home/armandli/code/raft/machine3_state.log",
+            "logfile": "/home/armandli/code/raft/machine3.log"
+        },
+        {
+            "name": "machine4",
+            "ip": "127.0.0.1",
+            "comm_port": 7657,
+            "client_port": 8768,
+            "statelog": "/home/armandli/code/raft/machine4_state.log",
+            "logfile": "/home/armandli/code/raft/machine4.log"
+        },
+        {
+            "name": "machine5",
+            "ip": "127.0.0.1",
+            "comm_port": 7658,
+            "client_port": 8769,
+            "statelog": "/home/armandli/code/raft/machine5_state.log",
+            "logfile": "/home/armandli/code/raft/machine5.log"
+        }
+    ],
+    "config": {
+        "election_timeout_min": 150,
+        "election_timeout_max": 300,
+        "heartbeat_interval": 75
+    }
+}

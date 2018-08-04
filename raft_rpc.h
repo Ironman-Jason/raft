@@ -17,7 +17,7 @@
 #include <cereal/types/string.hpp>
 
 //for sending and receiving raft messages
-namespace RaftRPC {
+namespace Raft {
 
 constexpr size_t MAX_MSG_SZ = 1500U;
 
@@ -30,7 +30,7 @@ std::string build_msg(const Args&... args){
   std::stringstream msg_ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(msg_ss);
-    RaftMsg::Type type(T::etype());
+    Type type(T::etype());
     T msg(args...);
     oarchive(type);
     oarchive(msg);
@@ -43,7 +43,7 @@ std::string build_msg(const T& obj){
   std::stringstream msg_ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(msg_ss);
-    RaftMsg::Type type(T::etype());
+    Type type(T::etype());
     oarchive(type);
     oarchive(obj);
   }
@@ -55,7 +55,7 @@ size_t fill_container(C<E>& msg_obj, IT beg, IT end){
   std::stringstream container_msg;
   {
     cereal::PortableBinaryOutputArchive oarchive(container_msg);
-    RaftMsg::Type type(C<E>::etype());
+    Type type(C<E>::etype());
     oarchive(type);
     oarchive(msg_obj);
   }
@@ -80,9 +80,9 @@ size_t fill_container(C<E>& msg_obj, IT beg, IT end){
   return elems_filled;
 }
 
-RaftMsg::RaftMsgType msg_type(const std::string& msg){
+RaftMsgType msg_type(const std::string& msg){
   std::stringstream rpc_ss; rpc_ss << msg;
-  RaftMsg::Type type;
+  Type type;
   {
     cereal::PortableBinaryInputArchive archive(rpc_ss);
     archive(type);
@@ -93,7 +93,7 @@ RaftMsg::RaftMsgType msg_type(const std::string& msg){
 template <typename T>
 T read_msg_as(const std::string& msg){
   std::stringstream rpc_ss; rpc_ss << msg;
-  RaftMsg::Type type;
+  Type type;
   T obj;
   {
     cereal::PortableBinaryInputArchive archive(rpc_ss);
@@ -151,7 +151,7 @@ class RPC {
       return;
     }
 
-    RaftMsg::RaftMsgType rep_type = msg_type(rep_msg);
+    RaftMsgType rep_type = msg_type(rep_msg);
 
     if (rep_type != R::etype()){
       BOOST_LOG_SEV(logger(), sev::error) << __FUNCTION__ << " unexpected return object. could be corrupted. type " << rep_type;
@@ -180,20 +180,20 @@ class RPC {
       return;
     }
 
-    RaftMsg::RaftMsgType mtype = msg_type(recv_msg);
-    RaftMsg::Reply rep;
+    RaftMsgType mtype = msg_type(recv_msg);
+    Reply rep;
     switch (mtype){
-      case RaftMsg::RVoteReq: {
-        RaftMsg::RequestVote msgobj = read_msg_as<RaftMsg::RequestVote>(recv_msg);
+      case RVoteReq: {
+        RequestVote msgobj = read_msg_as<RequestVote>(recv_msg);
         rep = rvh(msgobj);
       } break;
-      case RaftMsg::AEntReq: {
-        RaftMsg::AppendEntries<E> msgobj = read_msg_as<RaftMsg::AppendEntries<E>>(recv_msg);
+      case AEntReq: {
+        AppendEntries<E> msgobj = read_msg_as<AppendEntries<E>>(recv_msg);
         rep = aeh(msgobj);
       } break;
-      case RaftMsg::InSnapReq: {
+      case InSnapReq: {
         //TODO: is Reply for InstallSnapshot correct?
-        RaftMsg::InstallSnapshot msgobj = read_msg_as<RaftMsg::InstallSnapshot>(recv_msg);
+        InstallSnapshot msgobj = read_msg_as<InstallSnapshot>(recv_msg);
         rep = ish(msgobj);
       } break;
       default: {
@@ -218,8 +218,9 @@ class RPC {
 
   template <typename RVH, typename AEH, typename ISH>
   void rpc_persistent_async_dispatch_handler(Socket::ptr sock, RVH rvh, AEH aeh, ISH ish, const boost::system::error_code& ec){
-    rpc_async_dispatch_handler_helper(sock, rvh, aeh, ish, ec);
+    //allow immediate readiness to accept additional connections if exist
     rpc_persistent_async_dispatch(rvh, aeh, ish);
+    rpc_async_dispatch_handler_helper(sock, rvh, aeh, ish, ec);
   }
 
 public:
@@ -237,6 +238,8 @@ public:
       BOOST_LOG_SEV(logger(), sev::error) << __FUNCTION__ << " message size too big. refuse to send";
       return std::nullopt;
     }
+
+    BOOST_LOG_SEV(logger(), sev::info) << __FUNCTION__ << " sending rpc call";
 
     //TODO: evaluate if this has to be done every time
     tcp::resolver resolver(mIos);
@@ -267,7 +270,7 @@ public:
       return std::nullopt;
     }
 
-    RaftMsg::RaftMsgType rep_type = msg_type(rep_msg);
+    RaftMsgType rep_type = msg_type(rep_msg);
 
     if (rep_type != R::etype()) return std::nullopt;
 
@@ -276,8 +279,10 @@ public:
 
   template <typename R, typename S, typename RHandler>
   void rpc_async_call(const Address& addr, const S& msg_obj, RHandler handler){
+    namespace sev = boost::log::trivial;
     using boost::asio::ip::tcp;
-    std::string msg = build_msg(msg_obj);
+
+    BOOST_LOG_SEV(logger(), sev::info) << __FUNCTION__ << " sending async rpc call";
 
     //TODO: evaluate if this has to be done every time
     tcp::resolver resolver(mIos);
@@ -290,6 +295,10 @@ public:
 
   template <typename R, typename S>
   std::vector<std::optional<R>> rpc_broadcast(const std::vector<Address>& addrs, const S& msg_obj){
+    namespace sev = boost::log::trivial;
+
+    BOOST_LOG_SEV(logger(), sev::info) << "Begin broadcast";
+
     std::vector<std::optional<R>> ret;
     ret.reserve(addrs.size());
     for (const Address& addr : addrs)
@@ -299,6 +308,10 @@ public:
 
   template <typename R, typename S, typename RHandler>
   void rpc_async_broadcast(const std::vector<Address>& addrs, const S& msg_obj, RHandler handler){
+    namespace sev = boost::log::trivial;
+
+    BOOST_LOG_SEV(logger(), sev::info) << "Begin broadcast.";
+
     for (const Address& addr : addrs)
       rpc_async_call<R>(addr, msg_obj, handler);
   }
@@ -327,21 +340,21 @@ public:
       return;
     }
 
-    RaftMsg::RaftMsgType mtype = msg_type(recv_msg);
-    RaftMsg::Reply rep;
+    RaftMsgType mtype = msg_type(recv_msg);
+    Reply rep;
 
     switch (mtype){
-      case RaftMsg::RVoteReq: {
-        RaftMsg::RequestVote rv = read_msg_as<RaftMsg::RequestVote>(recv_msg);
+      case RVoteReq: {
+        RequestVote rv = read_msg_as<RequestVote>(recv_msg);
         rep = rvh(rv);
       } break;
-      case RaftMsg::AEntReq: {
-        RaftMsg::AppendEntries<E> ae = read_msg_as<RaftMsg::AppendEntries<E>>(recv_msg);
+      case AEntReq: {
+        AppendEntries<E> ae = read_msg_as<AppendEntries<E>>(recv_msg);
         rep = aeh(ae);
       } break;
-      case RaftMsg::InSnapReq: {
+      case InSnapReq: {
         //TODO: is Reply for InstallSnapshot correct?
-        RaftMsg::InstallSnapshot is = read_msg_as<RaftMsg::InstallSnapshot>(recv_msg);
+        InstallSnapshot is = read_msg_as<InstallSnapshot>(recv_msg);
         rep = ish(is);
       } break;
       default: {
@@ -362,6 +375,10 @@ public:
   template <typename RVHandler, typename AEHandler, typename ISHandler>
   [[ noreturn ]]
   void rpc_persistent_dispatch(RVHandler rvh, AEHandler aeh, ISHandler ish){
+    namespace sev = boost::log::trivial;
+
+    BOOST_LOG_SEV(logger(), sev::info) << "Begin listening to request";
+
     for (;;){
       rpc_dispatch(rvh, aeh, ish);
     }
@@ -369,17 +386,25 @@ public:
 
   template <typename RVH, typename AEH, typename ISH>
   void rpc_async_dispatch(RVH rvh, AEH aeh, ISH ish){
+    namespace sev = boost::log::trivial;
+
+    BOOST_LOG_SEV(logger(), sev::info) << "Begin listening to single request";
+
     Socket::ptr sock = Socket::create(mIos);
     mAcceptor.async_accept(sock->socket(), std::bind(&RPC::rpc_async_dispatch_handler<RVH, AEH, ISH>, this, sock, rvh, aeh, ish, std::placeholders::_1));
   }
 
   template <typename RVH, typename AEH, typename ISH>
   void rpc_persistent_async_dispatch(RVH rvh, AEH aeh, ISH ish){
+    namespace sev = boost::log::trivial;
+
+    BOOST_LOG_SEV(logger(), sev::info) << "Begin listening to request";
+
     Socket::ptr sock = Socket::create(mIos);
     mAcceptor.async_accept(sock->socket(), std::bind(&RPC::rpc_persistent_async_dispatch_handler<RVH, AEH, ISH>, this, sock, rvh, aeh, ish, std::placeholders::_1));
   }
 };
 
-} //RaftRPC
+} //Raft
 
 #endif//RAFT_RPC

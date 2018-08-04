@@ -44,6 +44,15 @@ public:
   int portno() const { return std::stoi(mPort); }
 };
 
+bool operator==(const Address& a, const Address& b){
+  if (a.ip() == b.ip() && a.port() == b.port()) return true;
+  else                                          return false;
+}
+
+bool operator!=(const Address& a, const Address& b){
+  return not operator==(a, b);
+}
+
 void init_log(const char* filename){
   log::add_file_log(
       log::keywords::file_name = filename,

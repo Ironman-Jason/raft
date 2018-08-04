@@ -13,7 +13,7 @@
 
 #include <raft_util.h>
 
-namespace RaftLog {
+namespace Raft {
 
 template <typename T>
 struct RaftLogBlock {
@@ -122,6 +122,6 @@ public:
   Int lastIndex() const { return mLastLogIndex; }
 };
 
-} //RaftLog
+} //Raft
 
 #endif//RAFT_LOG
