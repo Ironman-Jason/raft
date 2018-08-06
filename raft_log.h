@@ -2,9 +2,12 @@
 #define RAFT_LOG
 
 #include <cassert>
+#include <type_traits>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <optional>
+#include <algorithm>
 
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/portable_binary.hpp>
@@ -22,6 +25,7 @@ struct RaftLogBlock {
   T mData;
 
   RaftLogBlock(Int term, Int no, const T& data): mTerm(term), mSeqNo(no), mData(data) {}
+  RaftLogBlock(Int term, Int no): mTerm(term), mSeqNo(no), mData() {}
   RaftLogBlock() = default;
   ~RaftLogBlock() = default;
 
@@ -32,6 +36,13 @@ struct RaftLogBlock {
 };
 
 template <typename T>
+bool operator<(const RaftLogBlock<T>& a, const RaftLogBlock<T>& b){
+  if (a.mTerm < b.mTerm)                         return true;
+  if (a.mTerm == b.mTerm && a.mSeqNo < b.mSeqNo) return true;
+  else                                           return false;
+}
+
+template <typename T>
 class RaftLog {
   std::vector<RaftLogBlock<T>> mBlocks;
   std::string mFilename;
@@ -39,7 +50,7 @@ class RaftLog {
   Int mLastLogIndex;
 
   void write_out(){
-    std::ofstream fs(mFilename.c_str(), std::ofstream::app);
+    std::ofstream fs(mFilename.c_str(), std::ofstream::trunc);
     {
       cereal::JSONOutputArchive archive(fs);
       archive(mBlocks);
@@ -57,6 +68,20 @@ class RaftLog {
     }
     fs.close();
   }
+
+  void clear_logfile(){
+    std::ofstream cleaner;
+    cleaner.open(mFilename.c_str(), std::ofstream::out | std::ofstream::trunc);
+    cleaner.close();
+  }
+
+  void append_blocks(Int term, Int idx, const std::vector<T>& blocks){
+    Int idx_accu = idx;
+    for (typename std::decay<decltype(blocks)>::type::const_iterator it = std::cbegin(blocks); it != std::cend(blocks); ++it)
+      mBlocks.emplace_back(term, idx_accu++, (*it));
+    mLastLogTerm = term;
+    mLastLogIndex = idx_accu - 1;
+  }
 public:
   explicit RaftLog(const char* logfile): mFilename(logfile) {
     read_in();
@@ -68,54 +93,56 @@ public:
       mLastLogIndex = mBlocks.back().mSeqNo;
     }
 
-    mBlocks.clear();
+    clear_logfile();
   }
   ~RaftLog(){ write_out(); }
 
-  void push_back(const T& blk_data, Int new_term = 0){
-    Int term = (new_term == 0) ? lastTerm() : new_term;
-    Int index = (new_term == 0) ? (lastIndex() + 1) : 0;
+  //NOTE: term 0 is reserved to represent no term and no data; there should be
+  //no block inserted with term 0
+  bool push_back_at(Int term, Int idx, Int new_term, Int new_idx, const std::vector<T>& blocks){
+    //if there is no log yet
+    if (term == 0){
+      append_blocks(new_term, new_idx, blocks);
+      return true;
+    }
 
-    //TODO: take care of this more gracefully
-    assert(term > 0);
-    assert(term >= lastTerm());
-    
-    mBlocks.emplace_back(term, index, blk_data);
-    mLastLogTerm = term;
-    mLastLogIndex = index;
+    typename std::decay<decltype(mBlocks)>::type::iterator it = std::lower_bound(std::begin(mBlocks), std::end(mBlocks), RaftLogBlock<T>(term, idx));
+
+    if (it == std::end(mBlocks)) return false;
+
+    mBlocks.erase(++it, std::end(mBlocks));
+
+    append_blocks(new_term, new_idx, blocks);
+    return true;
+  }
+
+  std::optional<T> get(Int term, Int idx) const {
+    if (term == 0) return std::nullopt;
+    if (mLastLogTerm < term) return std::nullopt;
+
+    typename std::decay<decltype(mBlocks)>::type::iterator it = std::lower_bound(std::begin(mBlocks), std::end(mBlocks), RaftLogBlock<T>(term, idx));
+
+    if (it == std::end(mBlocks))
+      return std::nullopt;
+
+    return (*it).mData;
+  }
+
+  //erase until block where term = term and seqno = idx
+  void erase_until(Int term, Int idx){
+    mBlocks.erase(std::remove_if(std::begin(mBlocks), std::end(mBlocks), [term, idx](RaftLogBlock<T>& bk){
+      if (bk.mTerm < term)                     return true;
+      if (bk.mTerm == term && bk.mSeqNo < idx) return true;
+      else                                     return false;
+    }));
   }
 
   void flush(){
     write_out();
-    mBlocks.clear();
-  }
-
-  std::vector<T> all_content(){
-    std::vector<T> ret;
-
-    std::ifstream fs(mFilename.c_str());
-    if (fs.peek() != std::ifstream::traits_type::eof()){
-      std::vector<RaftLogBlock<T>> blocks;
-      {
-        cereal::JSONInputArchive archive(fs);
-        archive(blocks);
-      }
-      for (auto& block : blocks){
-        ret.push_back(block.mData);
-      }
-    }
-    fs.close();
-
-    for (auto& block : mBlocks){
-      ret.push_back(block.mData);
-    }
-    return ret;
   }
 
   void force_clear(){
-    std::ofstream fs(mFilename.c_str(), std::ofstream::trunc);
-    fs << "";
-    fs.close();
+    clear_logfile();
   }
 
   Int lastTerm() const { return mLastLogTerm; }

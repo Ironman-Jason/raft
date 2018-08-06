@@ -16,7 +16,7 @@
 using boost::asio::ip::tcp;
 
 TEST(BuildMsg, BuildRequestVote1){
-  std::string t = RaftRPC::build_msg<RaftMsg::RequestVote>(1, "test1", 2, 3);
+  std::string t = Raft::build_msg<Raft::RequestVote>(1, "test1", 2, 3);
   for (size_t i = 0; i < t.length(); ++i){
     std::cout << (int)t[i] << " ";
   }
@@ -24,8 +24,8 @@ TEST(BuildMsg, BuildRequestVote1){
 }
 
 TEST(BuildMsg, BuildRequestVote2){
-  RaftMsg::RequestVote o(2, "test2", 3, 4);
-  std::string t = RaftRPC::build_msg(o);
+  Raft::RequestVote o(2, "test2", 3, 4);
+  std::string t = Raft::build_msg(o);
   for (size_t i = 0; i < t.length(); ++i){
     std::cout << (int)t[i] << " ";
   }
@@ -33,56 +33,56 @@ TEST(BuildMsg, BuildRequestVote2){
 }
 
 TEST(BuildMsg, BuildAppendEntries1){
-  std::string t = RaftRPC::build_msg<RaftMsg::AppendEntries<std::string>>(13, "test2", 9, 8, 7);
+  std::string t = Raft::build_msg<Raft::AppendEntries<std::string>>(13, "test2", 9, 8, 7);
   for (size_t i = 0; i < t.length(); ++i)
     std::cout << (int)t[i] << " ";
   std::cout << std::endl;
 }
 
 TEST(BuildMsg, BuildAppendEntries2){
-  RaftMsg::AppendEntries<std::string> o(15, "test2", 17, 19, 22);
+  Raft::AppendEntries<std::string> o(15, "test2", 17, 19, 22);
   o.push_back("lololo");
   o.push_back("hahaha");
-  std::string t = RaftRPC::build_msg(o);
+  std::string t = Raft::build_msg(o);
   for (size_t i = 0; i < t.length(); ++i)
     std::cout << (int)t[i] << " ";
   std::cout << std::endl;
 }
 
 TEST(BuildMsg, BuildAppendEntriesLarge){
-  RaftMsg::AppendEntries<std::string> o(19, "test3", 1919, 1717, 77);
+  Raft::AppendEntries<std::string> o(19, "test3", 1919, 1717, 77);
   for (size_t i = 0; i < 2000; ++i)
     o.push_back("wowowwo");
-  std::string t = RaftRPC::build_msg(o);
+  std::string t = Raft::build_msg(o);
   std::cout << "length: " << t.length() << std::endl;
 }
 
 TEST(BuildMsg, BuildReply1){
-  RaftMsg::Reply r(8888, true);
-  std::string t = RaftRPC::build_msg(r);
+  Raft::Reply r(8888, true);
+  std::string t = Raft::build_msg(r);
   for (size_t i = 0; i < t.length(); ++i)
     std::cout << (int)t[i] << " ";
   std::cout << std::endl;
 }
 
 TEST(BuildMsg, BuildReply2){
-  std::string t = RaftRPC::build_msg<RaftMsg::Reply>(9999, false);
+  std::string t = Raft::build_msg<Raft::Reply>(9999, false);
   for (size_t i = 0; i < t.length(); ++i)
     std::cout << (int)t[i] << " ";
   std::cout << std::endl;
 }
 
 TEST(MsgType, ReadRequestVote1){
-  RaftMsg::RequestVote o(11, "test11", 15, 17);
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::RaftMsgType t = RaftRPC::msg_type(s);
-  EXPECT_EQ(RaftMsg::RVoteReq, t);
+  Raft::RequestVote o(11, "test11", 15, 17);
+  std::string s = Raft::build_msg(o);
+  Raft::RaftMsgType t = Raft::msg_type(s);
+  EXPECT_EQ(Raft::RVoteReq, t);
 }
 
 TEST(ReadMsg, ReadRequestVote1){
-  RaftMsg::RequestVote o(27, "test27", 97, 107);
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::RequestVote t = RaftRPC::read_msg_as<RaftMsg::RequestVote>(s);
+  Raft::RequestVote o(27, "test27", 97, 107);
+  std::string s = Raft::build_msg(o);
+  Raft::RequestVote t = Raft::read_msg_as<Raft::RequestVote>(s);
   EXPECT_EQ(27, t.term);
   EXPECT_STREQ("test27", t.candidateId.c_str());
   EXPECT_EQ(97, t.lastLogTerm);
@@ -90,19 +90,19 @@ TEST(ReadMsg, ReadRequestVote1){
 }
 
 TEST(ReadMsg, ReadAppendEntries1){
-  RaftMsg::AppendEntries<std::string> o(1919, "test77", 9999, 8888, 4786);
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::RaftMsgType t = RaftRPC::msg_type(s);
-  EXPECT_EQ(RaftMsg::AEntReq, t);
+  Raft::AppendEntries<std::string> o(1919, "test77", 9999, 8888, 4786);
+  std::string s = Raft::build_msg(o);
+  Raft::RaftMsgType t = Raft::msg_type(s);
+  EXPECT_EQ(Raft::AEntReq, t);
 }
 
 TEST(ReadMsg, ReadAppendEntries2){
-  RaftMsg::AppendEntries<std::string> o(6492, "test88", 4937, 2057, 9956);
+  Raft::AppendEntries<std::string> o(6492, "test88", 4937, 2057, 9956);
   o.push_back("wala");
   o.push_back("steak");
   o.push_back("hamburger");
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::AppendEntries<std::string> t = RaftRPC::read_msg_as<RaftMsg::AppendEntries<std::string>>(s);
+  std::string s = Raft::build_msg(o);
+  Raft::AppendEntries<std::string> t = Raft::read_msg_as<Raft::AppendEntries<std::string>>(s);
   EXPECT_EQ(6492, t.term);
   EXPECT_STREQ("test88", t.leaderId.c_str());
   EXPECT_EQ(4937, t.prevLogTerm);
@@ -115,39 +115,39 @@ TEST(ReadMsg, ReadAppendEntries2){
 }
 
 TEST(ReadMsg, ReadReply1){
-  RaftMsg::Reply o(3865, true);
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::RaftMsgType t = RaftRPC::msg_type(s);
-  EXPECT_EQ(RaftMsg::Rep, t);
+  Raft::Reply o(3865, true);
+  std::string s = Raft::build_msg(o);
+  Raft::RaftMsgType t = Raft::msg_type(s);
+  EXPECT_EQ(Raft::Rep, t);
 }
 
 TEST(ReadMsg, ReadReply2){
-  RaftMsg::Reply o(4973, false);
-  std::string s = RaftRPC::build_msg(o);
-  RaftMsg::Reply t = RaftRPC::read_msg_as<RaftMsg::Reply>(s);
+  Raft::Reply o(4973, false);
+  std::string s = Raft::build_msg(o);
+  Raft::Reply t = Raft::read_msg_as<Raft::Reply>(s);
   EXPECT_EQ(4973, t.term);
   EXPECT_EQ(false, t.voteGranted);
 }
 
 TEST(TestFillContainer, TestFill1){
-  RaftMsg::AppendEntries<std::string> msgobj(47865, "test666", 97, 8476, 1222);
+  Raft::AppendEntries<std::string> msgobj(47865, "test666", 97, 8476, 1222);
   std::vector<std::string> entries;
   for (size_t i = 0; i < 2000; ++i){
     entries.push_back("the entry");
   }
-  size_t fill_size = RaftRPC::fill_container(msgobj, entries.cbegin(), entries.cend());
+  size_t fill_size = Raft::fill_container(msgobj, entries.cbegin(), entries.cend());
   EXPECT_TRUE(fill_size < 2000);
   EXPECT_TRUE(msgobj.entries.size() == fill_size);
 
-  std::string t = RaftRPC::build_msg(msgobj);
-  EXPECT_TRUE(t.length() < RaftRPC::MAX_MSG_SZ);
+  std::string t = Raft::build_msg(msgobj);
+  EXPECT_TRUE(t.length() < Raft::MAX_MSG_SZ);
 }
 
 TEST(TestFillContainer, TestRandomFill1){
   std::mt19937 eng;
   std::uniform_int_distribution<size_t> dist(1, 25);
 
-  RaftMsg::AppendEntries<std::string> msgobj(47865, "test666", 97, 8476, 1222);
+  Raft::AppendEntries<std::string> msgobj(47865, "test666", 97, 8476, 1222);
   std::vector<std::string> entries;
   for (size_t i = 0; i < 2000; ++i){
     size_t len = dist(eng);
@@ -157,21 +157,21 @@ TEST(TestFillContainer, TestRandomFill1){
     }
     entries.push_back(word);
   }
-  size_t fill_size = RaftRPC::fill_container(msgobj, std::cbegin(entries), std::cend(entries));
+  size_t fill_size = Raft::fill_container(msgobj, std::cbegin(entries), std::cend(entries));
   EXPECT_TRUE(fill_size < 2000);
   EXPECT_TRUE(msgobj.entries.size() == fill_size);
 
-  std::string t = RaftRPC::build_msg(msgobj);
-  EXPECT_TRUE(t.length() < RaftRPC::MAX_MSG_SZ);
+  std::string t = Raft::build_msg(msgobj);
+  EXPECT_TRUE(t.length() < Raft::MAX_MSG_SZ);
 }
 
 class RPCCallTestService {
   boost::asio::io_service& mIos;
   tcp::acceptor            mAcceptor;
-  RaftMsg::RaftMsgType     mExpectedType;
+  Raft::RaftMsgType     mExpectedType;
 
   std::optional<std::string> read_msg(Socket::ptr& conn, boost::system::error_code& ecode){
-    std::string msg(RaftRPC::MAX_MSG_SZ, 0);
+    std::string msg(Raft::MAX_MSG_SZ, 0);
     conn->socket().read_some(boost::asio::buffer(msg), ecode);
 
     if (ecode) return std::nullopt;
@@ -188,21 +188,21 @@ class RPCCallTestService {
       return;
     }
 
-    RaftMsg::RaftMsgType mtype = RaftRPC::msg_type(recv_msg.value());
+    Raft::RaftMsgType mtype = Raft::msg_type(recv_msg.value());
 
     ASSERT_EQ(mExpectedType, mtype);
 
     switch (mtype){
-      case RaftMsg::RVoteReq: {
-        RaftMsg::RequestVote msgobj = RaftRPC::read_msg_as<RaftMsg::RequestVote>(recv_msg.value());
+      case Raft::RVoteReq: {
+        Raft::RequestVote msgobj = Raft::read_msg_as<Raft::RequestVote>(recv_msg.value());
 
         EXPECT_EQ(1337, msgobj.term);
         EXPECT_STREQ("leet", msgobj.candidateId.c_str());
         EXPECT_EQ(2664, msgobj.lastLogTerm);
         EXPECT_EQ(3993, msgobj.lastLogIndex);
       } break;
-      case RaftMsg::AEntReq: {
-        RaftMsg::AppendEntries<std::string> msgobj = RaftRPC::read_msg_as<RaftMsg::AppendEntries<std::string>>(recv_msg.value());
+      case Raft::AEntReq: {
+        Raft::AppendEntries<std::string> msgobj = Raft::read_msg_as<Raft::AppendEntries<std::string>>(recv_msg.value());
 
         EXPECT_EQ(962, msgobj.term);
         EXPECT_STREQ("ihen", msgobj.leaderId.c_str());
@@ -213,8 +213,8 @@ class RPCCallTestService {
         EXPECT_STREQ("world", msgobj.entries[0].c_str());
         EXPECT_STREQ("hello", msgobj.entries[1].c_str());
       } break;
-      case RaftMsg::InSnapReq: {
-        RaftMsg::InstallSnapshot msgobj = RaftRPC::read_msg_as<RaftMsg::InstallSnapshot>(recv_msg.value());
+      case Raft::InSnapReq: {
+        Raft::InstallSnapshot msgobj = Raft::read_msg_as<Raft::InstallSnapshot>(recv_msg.value());
 
         EXPECT_EQ(3846, msgobj.term);
         EXPECT_STREQ("jihs", msgobj.leaderId.c_str());
@@ -226,20 +226,20 @@ class RPCCallTestService {
       default: assert(false); break;
     }
 
-    RaftMsg::Reply rep(1, true);
-    std::string rep_msg = RaftRPC::build_msg(rep);
+    Raft::Reply rep(1, true);
+    std::string rep_msg = Raft::build_msg(rep);
     boost::asio::write(conn->socket(), boost::asio::buffer(rep_msg), ec);
   }
 public:
   RPCCallTestService(boost::asio::io_service& ios, const std::string& port):
-    mIos(ios), mAcceptor(ios, tcp::endpoint(tcp::v4(), std::stoi(port))), mExpectedType(RaftMsg::RVoteReq) {}
+    mIos(ios), mAcceptor(ios, tcp::endpoint(tcp::v4(), std::stoi(port))), mExpectedType(Raft::RVoteReq) {}
   
   void accept(){
     Socket::ptr conn = Socket::create(mIos);
     mAcceptor.async_accept(conn->socket(), std::bind(&RPCCallTestService::handle_accept, this, conn, std::placeholders::_1));
   }
 
-  void set_expected_type(RaftMsg::RaftMsgType typ){
+  void set_expected_type(Raft::RaftMsgType typ){
     mExpectedType = typ;
   }
 };
@@ -256,12 +256,12 @@ struct TestRaftRPCCall : testing::Test {
 
 TEST_F(TestRaftRPCCall, testRequestVoteCall){
   try {
-    test_server.set_expected_type(RaftMsg::RVoteReq);
+    test_server.set_expected_type(Raft::RVoteReq);
     test_server.accept();
     std::thread t([this](){ ios.run(); });
   
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    std::optional<RaftMsg::Reply> rep = rpc.rpc_call<RaftMsg::Reply>(Address("localhost", "6666"), RaftMsg::RequestVote(1337, "leet", 2664, 3993));
+    Raft::RPC<std::string> rpc(ios, "6667");
+    std::optional<Raft::Reply> rep = rpc.rpc_call<Raft::Reply>(Address("localhost", "6666"), Raft::RequestVote(1337, "leet", 2664, 3993));
     ASSERT_TRUE(rep.has_value());
     EXPECT_EQ(1, rep.value().term);
     EXPECT_EQ(true, rep.value().voteGranted);
@@ -275,15 +275,15 @@ TEST_F(TestRaftRPCCall, testRequestVoteCall){
 
 TEST_F(TestRaftRPCCall, testAppendEntries){
   try {
-    test_server.set_expected_type(RaftMsg::AEntReq);
+    test_server.set_expected_type(Raft::AEntReq);
     test_server.accept();
     std::thread t([this](){ ios.run(); });
 
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    RaftMsg::AppendEntries<std::string> callobj(962, "ihen", 3498, 284, 747);
+    Raft::RPC<std::string> rpc(ios, "6667");
+    Raft::AppendEntries<std::string> callobj(962, "ihen", 3498, 284, 747);
     callobj.push_back("world");
     callobj.push_back("hello");
-    std::optional<RaftMsg::Reply> rep = rpc.rpc_call<RaftMsg::Reply>(Address("localhost", "6666"), callobj);;
+    std::optional<Raft::Reply> rep = rpc.rpc_call<Raft::Reply>(Address("localhost", "6666"), callobj);;
     ASSERT_TRUE(rep.has_value());
     EXPECT_EQ(1, rep.value().term);
     EXPECT_EQ(true, rep.value().voteGranted);
@@ -298,8 +298,8 @@ TEST_F(TestRaftRPCCall, testAppendEntries){
 TEST(TestRaftRPCFailedCall, testNoServerCall){
   try {
     boost::asio::io_service ios;
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    std::optional<RaftMsg::Reply> rep = rpc.rpc_call<RaftMsg::Reply>(Address("localhost", "6666"), RaftMsg::RequestVote(1337, "leet", 2664, 3993));
+    Raft::RPC<std::string> rpc(ios, "6667");
+    std::optional<Raft::Reply> rep = rpc.rpc_call<Raft::Reply>(Address("localhost", "6666"), Raft::RequestVote(1337, "leet", 2664, 3993));
     EXPECT_FALSE(rep.has_value());
   } catch (std::exception& e){
     std::cerr << "Caught error: " << e.what() << std::endl;
@@ -309,14 +309,14 @@ TEST(TestRaftRPCFailedCall, testNoServerCall){
 
 TEST_F(TestRaftRPCCall, testRequestVoteAsync){
   try {
-    test_server.set_expected_type(RaftMsg::RVoteReq);
+    test_server.set_expected_type(Raft::RVoteReq);
     test_server.accept();
     std::thread t([this](){ ios.run(); });
 
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6666"),
-      RaftMsg::RequestVote(1337, "leet", 2664, 3993),
-      [](RaftMsg::Reply& rep){
+    Raft::RPC<std::string> rpc(ios, "6667");
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6666"),
+      Raft::RequestVote(1337, "leet", 2664, 3993),
+      [](Raft::Reply& rep){
         EXPECT_EQ(1, rep.term);
         EXPECT_EQ(true, rep.voteGranted);
     });
@@ -331,15 +331,15 @@ TEST_F(TestRaftRPCCall, testRequestVoteAsync){
 
 TEST_F(TestRaftRPCCall, testAppendEntriesAsync){
   try {
-    test_server.set_expected_type(RaftMsg::AEntReq);
+    test_server.set_expected_type(Raft::AEntReq);
     test_server.accept();
     std::thread t([this]{ ios.run(); });
 
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    RaftMsg::AppendEntries<std::string> callobj(962, "ihen", 3498, 284, 747);
+    Raft::RPC<std::string> rpc(ios, "6667");
+    Raft::AppendEntries<std::string> callobj(962, "ihen", 3498, 284, 747);
     callobj.push_back("world");
     callobj.push_back("hello");
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6666"), callobj, [](RaftMsg::Reply& rep){
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6666"), callobj, [](Raft::Reply& rep){
         EXPECT_EQ(1, rep.term);
         EXPECT_EQ(true, rep.voteGranted);
     });
@@ -355,8 +355,8 @@ TEST_F(TestRaftRPCCall, testAppendEntriesAsync){
 TEST(TestRaftRPCFailedCall, testNoServerCallAsync){
   try {
     boost::asio::io_service ios;
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6666"), RaftMsg::RequestVote(1337, "leet", 2664, 3993), [](RaftMsg::Reply){
+    Raft::RPC<std::string> rpc(ios, "6667");
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6666"), Raft::RequestVote(1337, "leet", 2664, 3993), [](Raft::Reply){
         ASSERT_FALSE(!!!"should never reach here");
     });
 
@@ -378,33 +378,33 @@ struct TestRaftRPCDispatch : testing::Test {
 
 TEST_F(TestRaftRPCDispatch, testRequestVoteDispatch){
   try {
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
+    Raft::RPC<std::string> rpc(ios, "6667");
 
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6667"), RaftMsg::RequestVote(4739, "jfieyu", 438, 947),
-      [](RaftMsg::Reply& rep){
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6667"), Raft::RequestVote(4739, "jfieyu", 438, 947),
+      [](Raft::Reply& rep){
         EXPECT_EQ(48, rep.term);
         EXPECT_EQ(false, rep.voteGranted);
     });
     std::thread t([this](){ ios.run(); });
 
     rpc.rpc_dispatch(
-      [](RaftMsg::RequestVote& msg){
+      [](Raft::RequestVote& msg){
         EXPECT_EQ(4739, msg.term);
         EXPECT_STREQ("jfieyu", msg.candidateId.c_str());
         EXPECT_EQ(438, msg.lastLogTerm);
         EXPECT_EQ(947, msg.lastLogIndex);
 
-        RaftMsg::Reply rep(48, false);
+        Raft::Reply rep(48, false);
         return rep;
       },
-      [](RaftMsg::AppendEntries<std::string>&){
+      [](Raft::AppendEntries<std::string>&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       },
-      [](RaftMsg::InstallSnapshot&){
+      [](Raft::InstallSnapshot&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       }
     );
@@ -418,25 +418,25 @@ TEST_F(TestRaftRPCDispatch, testRequestVoteDispatch){
 
 TEST_F(TestRaftRPCDispatch, testAppendEntriesDispatch){
   try {
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    RaftMsg::AppendEntries<std::string> msgobj(4738, "koh fs", 4947, 2283, 474);
+    Raft::RPC<std::string> rpc(ios, "6667");
+    Raft::AppendEntries<std::string> msgobj(4738, "koh fs", 4947, 2283, 474);
     msgobj.push_back("dyepnud");
     msgobj.push_back("ddgdg");
     msgobj.push_back("cufy");
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6667"), msgobj,
-      [](RaftMsg::Reply& rep){
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6667"), msgobj,
+      [](Raft::Reply& rep){
         EXPECT_EQ(8, rep.term);
         EXPECT_EQ(true, rep.voteGranted);
     });
     std::thread t([this](){ ios.run(); });
 
     rpc.rpc_dispatch(
-      [](RaftMsg::RequestVote&){
+      [](Raft::RequestVote&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(48, false);
+        Raft::Reply rep(48, false);
         return rep;
       },
-      [](RaftMsg::AppendEntries<std::string>& msg){
+      [](Raft::AppendEntries<std::string>& msg){
         EXPECT_EQ(4738, msg.term);
         EXPECT_STREQ("koh fs", msg.leaderId.c_str());
         EXPECT_EQ(4947, msg.prevLogTerm);
@@ -447,12 +447,12 @@ TEST_F(TestRaftRPCDispatch, testAppendEntriesDispatch){
         EXPECT_STREQ("ddgdg", msg.entries[1].c_str());
         EXPECT_STREQ("cufy", msg.entries[2].c_str());
 
-        RaftMsg::Reply rep(8, true);
+        Raft::Reply rep(8, true);
         return rep;
       },
-      [](RaftMsg::InstallSnapshot&){
+      [](Raft::InstallSnapshot&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       }
     );
@@ -466,33 +466,33 @@ TEST_F(TestRaftRPCDispatch, testAppendEntriesDispatch){
 
 TEST_F(TestRaftRPCDispatch, testRequestVoteDispatchAsync){
   try {
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
+    Raft::RPC<std::string> rpc(ios, "6667");
 
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6667"), RaftMsg::RequestVote(211, "46cneu", 9474, 646),
-      [](RaftMsg::Reply& rep){
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6667"), Raft::RequestVote(211, "46cneu", 9474, 646),
+      [](Raft::Reply& rep){
         EXPECT_EQ(4756, rep.term);
         EXPECT_EQ(true, rep.voteGranted);
     });
     std::thread t1([this](){ ios.run(); });
 
     rpc.rpc_async_dispatch(
-      [](RaftMsg::RequestVote& msg){
+      [](Raft::RequestVote& msg){
         EXPECT_EQ(211, msg.term);
         EXPECT_STREQ("46cneu", msg.candidateId.c_str());
         EXPECT_EQ(9474, msg.lastLogTerm);
         EXPECT_EQ(646, msg.lastLogIndex);
 
-        RaftMsg::Reply rep(4756, true);
+        Raft::Reply rep(4756, true);
         return rep;
       },
-      [](RaftMsg::AppendEntries<std::string>&){
+      [](Raft::AppendEntries<std::string>&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       },
-      [](RaftMsg::InstallSnapshot&){
+      [](Raft::InstallSnapshot&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       }
     );
@@ -508,26 +508,26 @@ TEST_F(TestRaftRPCDispatch, testRequestVoteDispatchAsync){
 
 TEST_F(TestRaftRPCDispatch, testAppendEntriesDispatchAsync){
   try {
-    RaftRPC::RPC<std::string> rpc(ios, "6667");
-    RaftMsg::AppendEntries<std::string> msgobj(376291, "cbviufe8ygry2k", 3636, 9191, 6476);
+    Raft::RPC<std::string> rpc(ios, "6667");
+    Raft::AppendEntries<std::string> msgobj(376291, "cbviufe8ygry2k", 3636, 9191, 6476);
     msgobj.push_back("cvuiehfb ");
     msgobj.push_back(" 9uh iui ");
     msgobj.push_back("78yubpyh2goei2h");
     msgobj.push_back("nvfi");
-    rpc.rpc_async_call<RaftMsg::Reply>(Address("localhost", "6667"), msgobj,
-      [](RaftMsg::Reply& rep){
+    rpc.rpc_async_call<Raft::Reply>(Address("localhost", "6667"), msgobj,
+      [](Raft::Reply& rep){
         EXPECT_EQ(748786, rep.term);
         EXPECT_EQ(true, rep.voteGranted);
     });
     std::thread t1([this](){ ios.run(); });
 
     rpc.rpc_async_dispatch(
-      [](RaftMsg::RequestVote&){
+      [](Raft::RequestVote&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(48, false);
+        Raft::Reply rep(48, false);
         return rep;
       },
-      [](RaftMsg::AppendEntries<std::string>& msg){
+      [](Raft::AppendEntries<std::string>& msg){
         EXPECT_EQ(376291, msg.term);
         EXPECT_STREQ("cbviufe8ygry2k", msg.leaderId.c_str());
         EXPECT_EQ(3636, msg.prevLogTerm);
@@ -539,12 +539,12 @@ TEST_F(TestRaftRPCDispatch, testAppendEntriesDispatchAsync){
         EXPECT_STREQ("78yubpyh2goei2h", msg.entries[2].c_str());
         EXPECT_STREQ("nvfi", msg.entries[3].c_str());
 
-        RaftMsg::Reply rep(748786, true);
+        Raft::Reply rep(748786, true);
         return rep;
       },
-      [](RaftMsg::InstallSnapshot&){
+      [](Raft::InstallSnapshot&){
         EXPECT_TRUE(false);
-        RaftMsg::Reply rep(0, false);
+        Raft::Reply rep(0, false);
         return rep;
       }
     );

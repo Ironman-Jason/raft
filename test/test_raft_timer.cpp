@@ -10,7 +10,7 @@
 
 struct TimerTest : testing::Test {
   boost::asio::io_service ios;
-  RaftTimer::RDTimer timer;
+  Raft::RDTimer timer;
 
   TimerTest(): ios(), timer(ios, 3000, 4000) {
     init_log("test_raft_timer.log");
@@ -77,7 +77,7 @@ TEST_F(TimerTest, TestInterruptFail){
 
 struct BoundaryCaseTest : testing::Test {
   boost::asio::io_service ios;
-  RaftTimer::RDTimer timer;
+  Raft::RDTimer timer;
 
   BoundaryCaseTest(): ios(), timer(ios, 10000, 10001) {
     init_log("test_raft_timer.log");

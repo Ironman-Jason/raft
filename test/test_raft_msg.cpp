@@ -10,32 +10,32 @@ TEST(Type, UBinaryTest){
   std::stringstream ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
-    RaftMsg::Type r(RaftMsg::RVoteReq);
+    Raft::Type r(Raft::RVoteReq);
     oarchive(r);
   }
 
   std::cout << "Type binary: " << ss.str() << std::endl;
 
-  RaftMsg::Type t;
+  Raft::Type t;
   {
     cereal::PortableBinaryInputArchive iarchive(ss);
     iarchive(t);
   }
 
-  EXPECT_EQ(RaftMsg::RVoteReq, t.type);
+  EXPECT_EQ(Raft::RVoteReq, t.type);
 }
 
 TEST(RequestVote, UBinaryTest){
   std::stringstream ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
-    RaftMsg::RequestVote r(32799, "vortex", 88, 72);
+    Raft::RequestVote r(32799, "vortex", 88, 72);
     oarchive(r);
   }
 
   std::cout << "RequestVote binary: " << ss.str() << std::endl;
 
-  RaftMsg::RequestVote t;
+  Raft::RequestVote t;
   {
     cereal::PortableBinaryInputArchive iarchive(ss);
     iarchive(t);
@@ -51,7 +51,7 @@ TEST(AppendEntries, UBinaryTest){
   std::stringstream ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
-    RaftMsg::AppendEntries<std::string> r(7531, "work please", 91, 99999999, 1000);
+    Raft::AppendEntries<std::string> r(7531, "work please", 91, 99999999, 1000);
     r.push_back("entry 1");
     r.push_back("entry 2");
     r.push_back("entry 3");
@@ -61,7 +61,7 @@ TEST(AppendEntries, UBinaryTest){
 
   std::cout << "AppendEntries binary: " << ss.str() << std::endl;
 
-  RaftMsg::AppendEntries<std::string> t;
+  Raft::AppendEntries<std::string> t;
   {
     cereal::PortableBinaryInputArchive iarchive(ss);
     iarchive(t);
@@ -83,7 +83,7 @@ TEST(AppendEntries, LargeTest){
   std::stringstream ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
-    RaftMsg::AppendEntries<std::string> r(7531, "work please", 91, 99999999, 1000);
+    Raft::AppendEntries<std::string> r(7531, "work please", 91, 99999999, 1000);
     for (size_t i = 0; i < 100000; ++i){
       std::string msg("hello ");
       msg += std::to_string(i);
@@ -94,7 +94,7 @@ TEST(AppendEntries, LargeTest){
 
   std::cout << "Size: " << ss.str().length() << std::endl;
 
-  RaftMsg::AppendEntries<std::string> t;
+  Raft::AppendEntries<std::string> t;
   {
     cereal::PortableBinaryInputArchive iarchive(ss);
     iarchive(t);
@@ -116,14 +116,14 @@ TEST(Reply, UBinaryTest){
   std::stringstream ss;
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
-    RaftMsg::Reply r(8080, true);
+    Raft::Reply r(8080, true);
     oarchive(r);
   }
 
   std::cout << "Reply binary: " << ss.str() << std::endl;
   std::cout << "Size: " << ss.str().length() << std::endl;
 
-  RaftMsg::Reply t;
+  Raft::Reply t;
   {
     cereal::PortableBinaryInputArchive iarchive(ss);
     iarchive(t);
