@@ -29,10 +29,22 @@ int main(int argc, const char* argv[]){
 
   ExampleServer::ExampleElectionServer server(io, name, config, raft_property);
 
-  std::thread t1([&io](){ io.run(); });
-  std::thread t2([&io](){ io.run(); });
-  std::thread t3([&io](){ io.run(); });
-  std::thread t4([&io](){ io.run(); });
+  std::thread t1([&io](){
+      io.run();
+      BOOST_LOG_SEV(logger(), sev::info) << "thread 1 exit";
+  });
+  std::thread t2([&io](){
+      io.run();
+      BOOST_LOG_SEV(logger(), sev::info) << "thread 2 exit";
+  });
+  std::thread t3([&io](){
+      io.run();
+      BOOST_LOG_SEV(logger(), sev::info) << "thread 3 exit";
+  });
+  std::thread t4([&io](){
+      io.run();
+      BOOST_LOG_SEV(logger(), sev::info) << "thread 4 exit";
+  });
 
   t1.join();
   t2.join();
